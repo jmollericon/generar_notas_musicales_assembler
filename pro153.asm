@@ -35,14 +35,14 @@ codigo  segment
     mov   ds, ax
 
     in    al, 61h         ; guardar el estado del parlante
-    and   al, 11111100b   ; GATE 2 = 0, OUT 2 = 0 (desactivar conexión contador 2 con el altavoz)
+    and   al, 11111100b   ; Gate2=0, Out2=0 (desactivar conexión contador 2 con el altavoz)
     mov   spkOld, al
     ;---------------------------------------------------------------
     ;                Los pollitos dicen en 5ta octava
     ;---------------------------------------------------------------
-    mov   si,0
+    mov   si, 0
   otra_nota:
-    mov   cx, notes[si]     ; obtenemos la nota
+    mov   cx, notes[si]     ; obtenemos la frecuencia de la nota
     mov   ax, duration[si]  ; obtenemos la duración de la nota
     mov   k, ax
     call  play_note         ; subrutina tocar nota
