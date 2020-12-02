@@ -1,3 +1,5 @@
+; Proyecto INF 153 - Assembler
+; Jorge Luis Mollericon Garcia
 ;-------------------------------------------------------------------
 pila    segment stack
         dw 100 dup(0)
