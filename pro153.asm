@@ -9,6 +9,7 @@ datos   segment
                     ; para '0' el 8254 ya no responde
   ;-----------------------------------------------------------------
   ; Notas y duración de cada nota para la canción los pollitos dicen
+  ;             Do,  Re,  Mi,  Fa,  Sol ...
   notes     dw  0523,0587,0659,0698,0784,0784,0880,0880,0880,0880
             dw  0784,0784,0698,0698,0698,0698,0659,0784,0587,0587
             dw  0587,0587,0523,0523
@@ -31,18 +32,18 @@ codigo  segment
     mov   ax, datos
     mov   ds, ax
 
-    in    al, 61h         ; Salva el parlante
-    and   al, 11111100b
+    in    al, 61h         ; guardar el estado del parlante
+    and   al, 11111100b   ; GATE 2 = 0, OUT 2 = 0 (desactivar conexión contador 2 con el altavoz)
     mov   spkOld, al
     ;---------------------------------------------------------------
-    ;                   Los pollitos dicen en 5ta octava
+    ;                Los pollitos dicen en 5ta octava
     ;---------------------------------------------------------------
     mov   si,0
   otra_nota:
-    mov   cx, notes[si]   ; obtenemos la nota
+    mov   cx, notes[si]     ; obtenemos la nota
     mov   ax, duration[si]  ; obtenemos la duración de la nota
     mov   k, ax
-    call  play_note
+    call  play_note         ; subrutina tocar nota
     inc   si
     inc   si
     dec   cont
@@ -56,18 +57,18 @@ codigo  segment
   program endp
   ;-----------------------------------------------------------------
   play_note  proc
-    mov   dx, 12h         ; Convertir periodo
-    mov   ax, 34DCh       ; a frecuencia
-    div   cx              ; en CX esta el periodo
-    mov   dx, ax
-    mov   al, 0B6h        ; Configurar el 8254 (palabra de control -> )
-    out   43h, al         ;
-    mov   al, dl          ; Pasamos el byte bajo del contador
+    mov   dx, 12h         ; fc = 1193180 = 1234DCh
+    mov   ax, 34DCh       ; Calcular valor de N
+    div   cx              ; en CX esta el periodo N = fc/fn  =>  dx:ax/cx  -> N = ax
+    mov   dx, ax          ; dx <= N
+    mov   al, 0B6h        ; Configurar el 8254 (palabra de control -> 0B6h )
+    out   43h, al         ; carga de la condiguración en el temporizador 8254
+    mov   al, dl          ; Pasamos el byte bajo del contador N = dh:dl -> dl
     out   42h, al
-    mov   al, dh          ; Y ahora el alto
+    mov   al, dh          ; ahora pasamos el byte alto del contador N = dh:dl -> dh
     out   42h, al
     mov   al, spkOld      ; Encender el parlante
-    or    al, 00000011b
+    or    al, 00000011b   ; Gate2=1 y Out2=1 (se habilita la conexión contador 2 con el altavoz)
     out   61h, al
     call  retardo
     mov   al, spkOld      ; Apagamos el parlante
@@ -91,7 +92,7 @@ codigo  segment
   retardo proc
     push  cx
     call  tic
-    add   dx, k            ;Modificar el Tic
+    add   dx, k            ; Modificar el Tic
     mov   ktic, dx
   r10:
     call  tic
